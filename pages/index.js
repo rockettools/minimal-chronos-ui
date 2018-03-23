@@ -42,14 +42,19 @@ export default class extends React.Component {
     this.setState({job});
   }
 
-  makeInputField(fieldName, path) {
+  makeInputField(fieldName, path, style) {
     const that = this;
-    return <div className={'form-group'}>{fieldName}: <input onChange={function(evt){that.updateField(path, evt.target.value)}} type='text' value={_.get(this.state.job, path)} /></div>
+    return <div className={'form-group'}>{fieldName}: <input style={style} onChange={function(evt){that.updateField(path, evt.target.value)}} type='text' value={_.get(this.state.job, path)} /></div>
   }
 
   makeCheckbox(fieldName, path) {
    const that = this;
     return <div className={'form-group'}>{fieldName}: <input type='checkbox' onChange={function(evt){that.updateField(path, evt.target.checked)}} checked={_.get(this.state.job, path)} /></div>    
+  }
+
+  makeTextarea(fieldName, path) {
+   const that = this;
+    return <div className={'form-group'}>{fieldName}: <textarea style={{width: '100%'}} onChange={function(evt){that.updateField(path, evt.target.value)}} value={_.get(this.state.job, path)} /></div>    
   }
 
   updateDuplicateName(evt) {
@@ -71,11 +76,16 @@ export default class extends React.Component {
   }
 
   duplicate() {
-    console.log('d');
     const job = _.cloneDeep(this.state.job);
     job.name = this.state.duplicateName;
     console.log(job);
     this.saveJob(job);
+  }
+
+  prependNewEnvVar() {
+    const job = this.state.job;
+    job.environmentVariables.unshift({name: '', value: ''});
+    this.setState({job});
   }
 
   render() {
@@ -90,20 +100,21 @@ export default class extends React.Component {
         <h3>{this.state.job.name}</h3>
         {this.makeCheckbox('Async', 'async')}
         {this.makeCheckbox('Disabled', 'disabled')}
-        <div className={'form-group'}>Description: <textarea style={{width: '100%'}} value={this.state.job.description} /></div>
+        {this.makeTextarea('Description', 'description')}
+        {this.makeTextarea('Command', 'command')}
 
-        <div className={'form-group'}><label for='command'>Command:</label><textarea id='command' style={{width: '100%'}} value={this.state.job.command} /></div>
         <h5>Resources</h5>
-        {that.makeInputField('CPUs', 'cpus')}
-        {that.makeInputField('Mem', 'mem')}
-        {that.makeInputField('Disk', 'disk')}
+        <div style={{float: 'left'}}>{that.makeInputField('CPUs', 'cpus')}</div>
+        <div style={{float: 'left', 'paddingLeft': '10px'}}>{that.makeInputField('Mem', 'mem')}</div>
+        <div style={{float: 'left', 'paddingLeft': '10px'}}>{that.makeInputField('Disk', 'disk')}</div>
         <h5>Owner</h5>
-        {that.makeInputField('Email', 'owner')}
-        {that.makeInputField('Name', 'ownerName')}
-
+        <div style={{float: 'left'}}>{that.makeInputField('Name', 'ownerName')}</div>
+        <div style={{float: 'left', 'paddingLeft': '10px'}}>{that.makeInputField('Email', 'owner', {width: '300px'})}</div>
+        
+        <div style={{clear: 'both'}}></div>
         {
           this.state.job.container ? <div><h5>Container</h5>
-          {that.makeInputField('Image', 'container.image')}
+          {that.makeInputField('Image', 'container.image', {width: '600px'})}
             </div> : null
         }
 
@@ -113,8 +124,9 @@ export default class extends React.Component {
         {that.makeInputField('scheduleTimeZone', 'scheduleTimeZone')}
 
         <h5>Environment Variables</h5>
-        {this.state.job.environmentVariables.sort((a,b)=>a.name.localeCompare(b.name)).map(function(envVar) {
-          return <div><input type='text' value={envVar.name} style={{width: '300px'}} /> = <input type='text' value={envVar.value} style={{width: '350px'}} /><span onClick={function(){that.removeEnvVar(envVar)}}>X</span></div>
+        <div onClick={that.prependNewEnvVar.bind(that)}>Add New Field</div>
+        {this.state.job.environmentVariables.map(function(envVar, idx) {
+          return <div><input type='text' value={envVar.name} onChange={function(evt){that.updateField(['environmentVariables', idx, 'name'],evt.target.value)}} style={{width: '300px'}} /> = <input type='text' value={envVar.value} onChange={function(evt){that.updateField(['environmentVariables', idx, 'value'],evt.target.value)}} style={{width: '350px'}} /><span onClick={function(){that.removeEnvVar(envVar)}}>X</span></div>
         })}
 
       </div>) : null;

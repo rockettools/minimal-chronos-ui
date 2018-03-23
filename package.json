@@ -1,8 +1,8 @@
 {
-  "name": "simple-chronos",
+  "name": "simple-chronos-ui",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "dev": "next",
     "build": "next build",
