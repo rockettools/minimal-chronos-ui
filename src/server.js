@@ -30,6 +30,12 @@ app.prepare().then(() => {
     res.json({done: 1})
   })
 
+  server.get('/run_job/:job', async (req, res) => {
+    await superagent.put(`${CHRONOS_URL}/scheduler/job/${encodeURIComponent(req.params.job)}`);
+
+    res.json({status: 'ok'});
+  });
+
   server.get('*', (req, res) => {
     handle(req, res)
   })

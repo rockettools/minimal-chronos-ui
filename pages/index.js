@@ -63,6 +63,10 @@ export default class extends React.Component {
     })
   }
 
+  runJob(job) {
+    fetch('/run_job/'+encodeURIComponent(job));
+  }
+
   saveJob(job) {
     const result = fetch('/job', {
       body: JSON.stringify(job),
@@ -94,7 +98,11 @@ export default class extends React.Component {
     const job = _.get(this, 'state.job') ? (<div style={{width: '100%'}}>
 
         <div style={{float: 'right'}}>
-          <button type="button" onClick={function(){ console.log('click'); that.saveJob(that.state.job)}} className={'btn btn-success'}>Save</button>
+
+
+                  <button type="button" onClick={function(){that.runJob(that.state.job.name)}} className={'btn btn-success'}>Run</button>
+
+          <button type="button" onClick={function(){ that.saveJob(that.state.job)}} className={'btn btn-success'}>Save</button>
           <button type="button" className={'btn btn-danger'}>Delete</button>
           <input type='text' onChange={that.updateDuplicateName.bind(that)} value={this.state.duplicateName} /> <span onClick={that.duplicate.bind(that)}>Duplicate</span></div>
         <h3>{this.state.job.name}</h3>
@@ -124,26 +132,25 @@ export default class extends React.Component {
         {that.makeInputField('scheduleTimeZone', 'scheduleTimeZone')}
 
         <h5>Environment Variables</h5>
-        <div onClick={that.prependNewEnvVar.bind(that)}>Add New Field</div>
+        <button className='btn btn-secondary' onClick={that.prependNewEnvVar.bind(that)}>Add New Field</button><br/><br/>
         {this.state.job.environmentVariables.map(function(envVar, idx) {
           return <div><input type='text' value={envVar.name} onChange={function(evt){that.updateField(['environmentVariables', idx, 'name'],evt.target.value)}} style={{width: '300px'}} /> = <input type='text' value={envVar.value} onChange={function(evt){that.updateField(['environmentVariables', idx, 'value'],evt.target.value)}} style={{width: '350px'}} /><span onClick={function(){that.removeEnvVar(envVar)}}>X</span></div>
         })}
-
+        <div style={{height: '20px', width: '100px'}}></div>
       </div>) : null;
 
     return (
-      <div className={'container'}>
+      <div className='' style={{width: '1200px', margin: '0 auto', position: 'relative', height: '100%'}}>
       <h2>Chronos</h2>
-      <div class="row">
+      <div className='' style={{position: 'absolute', top: '40px', bottom: '0'}}>
  
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous" />
-        <div className="col-sm-4" style={{ border: '1px solid black'}}>
+        <div style={{ bottom: '0', height:'100%', border: '1px solid black', overflowY: 'scroll', paddingLeft: '5px'}}>
           {_.get(this, 'state.jobs', []).map(function(job) {
-            return (<div onClick={function(){that.openJob(job)}} key={job.name}>{job.name}</div>);
+            return (<div onClick={function(){that.openJob(job)}} key={job.name} style={{cursor: 'pointer'}}>{job.name}</div>);
           })}
         </div>
           
-  <div class="col-sm-8">{job}</div>
+  <div style={{position: 'absolute', width: '700px', left: '420px', top: '0', height: '100%', overflowY:'scroll'}}>{job}</div>
 </div>
 
       </div>
