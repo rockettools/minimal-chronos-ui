@@ -25,6 +25,14 @@ app.prepare().then(() => {
     const superResult = await superagent.post(`${CHRONOS_URL}/scheduler/iso8601`).send(req.body);
     res.json({done: 1})
   });
+  
+  server.delete('/job/:name', async (req, res) => {
+    if (req.params.name.length === 0) {
+      return res.status(400).json({error: 'Job name must be non-empty'});
+    }
+    const superResult = await superagent.delete(`${CHRONOS_URL}/scheduler/job/${req.params.name}`);
+    res.json({status: 'deleted'})
+  });
 
   server.get('/test', (req, res) => {
     res.json({done: 1})
