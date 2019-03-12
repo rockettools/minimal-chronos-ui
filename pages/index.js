@@ -4,15 +4,19 @@ import React from 'react';
 export default class extends React.Component {
 
   async componentDidMount() {
+    await this.refreshJobs();
+  }
+  
+  async refreshJobs() {
     const result = await fetch('/job');
     const jobs = (await result.json()).items;
     this.setState({
       jobs
-    })
+    });
 
     if (window.location.hash && window.location.hash.length>1) {
       const hash = window.location.hash.substr(1);
-      console.log("Looking for: "+hash)
+
       const job = _.filter(jobs, job => job.name === hash)[0];
       if (job) {
         this.setState({
@@ -75,15 +79,30 @@ export default class extends React.Component {
       },
       method: 'POST'
     });
-
-    console.log(result);
   }
 
-  duplicate() {
+  async deleteJob(job) {
+    if (!confirm("Are you sure you want to delete: " + job.name + "?")) {
+      return;
+    }
+
+    await fetch('/job/'+job.name, {
+      headers: {
+        'content-type': 'application/json'
+      },
+      method: 'DELETE'
+    });
+    
+    return this.refreshJobs();
+  }
+
+  async duplicate() {
     const job = _.cloneDeep(this.state.job);
     job.name = this.state.duplicateName;
-    console.log(job);
-    this.saveJob(job);
+    
+    await this.saveJob(job);
+    
+    return this.refreshJobs();
   }
 
   prependNewEnvVar() {
