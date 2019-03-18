@@ -122,7 +122,7 @@ export default class extends React.Component {
                   <button type="button" onClick={function(){that.runJob(that.state.job.name)}} className={'btn btn-success'}>Run</button>
 
           <button type="button" onClick={function(){ that.saveJob(that.state.job)}} className={'btn btn-success'}>Save</button>
-          <button type="button" className={'btn btn-danger'}>Delete</button>
+          <button type="button" onClick={function(){that.deleteJob(that.state.job)}} className={'btn btn-danger'}>Delete</button>
           <input type='text' onChange={that.updateDuplicateName.bind(that)} value={this.state.duplicateName} /> <span onClick={that.duplicate.bind(that)}>Duplicate</span></div>
         <h3>{this.state.job.name}</h3>
         {this.makeCheckbox('Async', 'async')}
