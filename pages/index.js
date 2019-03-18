@@ -129,6 +129,7 @@ export default class extends React.Component {
         {this.makeCheckbox('Disabled', 'disabled')}
         {this.makeTextarea('Description', 'description')}
         {this.makeTextarea('Command', 'command')}
+        {this.makeCheckbox('Shell', 'shell')}
 
         <h5>Resources</h5>
         <div style={{float: 'left'}}>{that.makeInputField('CPUs', 'cpus')}</div>
