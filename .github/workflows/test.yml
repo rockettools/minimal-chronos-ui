@@ -10,7 +10,10 @@ on:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
     steps:
+      - name: Check out
+        uses: actions/checkout@v2
       - name: some docker stuff
         uses: docker/build-push-action@v1
         with:
