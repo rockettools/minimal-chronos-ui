@@ -21,3 +21,4 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: rockettools/minimal-chronos-ui
           tags: latest
+          tag_with_sha: true

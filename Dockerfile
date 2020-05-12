@@ -2,7 +2,7 @@ FROM node:14-alpine
 
 ADD . /src/
 WORKDIR /src
-RUN npm install
+RUN yarn
 RUN ./node_modules/next/dist/bin/next build
 
 ENV NODE_ENV=production
