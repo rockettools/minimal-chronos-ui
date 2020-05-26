@@ -11,6 +11,7 @@ export default class extends React.Component {
     const jobs = (await result.json()).items;
     this.setState({
       jobs,
+      showNewModal: false,
     });
 
     if (window.location.hash && window.location.hash.length > 1) {
@@ -154,7 +155,7 @@ export default class extends React.Component {
   prependNewConstraint() {
     const job = this.state.job;
     job.constraints = job.constraints || [];
-    job.constraints.unshift(["", ""]);
+    job.constraints.unshift(["", "EQUALS"]);
     this.setState({ job });
   }
 
@@ -164,12 +165,42 @@ export default class extends React.Component {
     });
   }
 
+  showNewModal() {
+    this.setState({
+      showNewModal: true,
+      newJobName: "",
+    });
+  }
+
+  hidNewModal() {
+    this.setState({
+      showNewModal: false,
+    });
+  }
+
+  newJobName(evt) {
+    this.setState({
+      newJobName: evt.target.value,
+    });
+  }
+
+  showNewJob() {
+    this.openJob({
+      name: this.state.newJobName,
+      description: "",
+      environmentVariables: [],
+    });
+    this.setState({
+      showNewModal: false,
+    });
+  }
+
   render() {
     const that = this;
 
     const job = _.get(this, "state.job") ? (
-      <div style={{ width: "100%" }}>
-        <div style={{ float: "right" }}>
+      <div className={""} style={{}}>
+        <div style={{}}>
           <button
             type="button"
             onClick={function () {
@@ -253,7 +284,7 @@ export default class extends React.Component {
         </button>
         <br />
         <br />
-        {this.state.job.constraints.map(function (envVar, idx) {
+        {_.get(this, "state.job.constraints", []).map(function (envVar, idx) {
           return (
             <div>
               <input
@@ -264,20 +295,7 @@ export default class extends React.Component {
                 }}
                 style={{ width: "160px" }}
               />
-              <select
-                value={envVar[1]}
-                onChange={function (evt) {
-                  that.updateField(["constraints", idx, "1"], evt.target.value);
-                }}
-              >
-                <option>CLUSTER</option>
-                <option>GROUP_BY</option>
-                <option>IS</option>
-                <option>LIKE</option>
-                <option>MAX_PER</option>
-                <option>UNIQUE</option>
-                <option>UNLIKE</option>
-              </select>
+              &nbsp;&nbsp;EQUALS&nbsp;&nbsp;
               <input
                 type="text"
                 value={envVar[2]}
@@ -305,6 +323,7 @@ export default class extends React.Component {
             </div>
           );
         })}
+        <br />
 
         <h5>Environment Variables</h5>
         <button
@@ -357,67 +376,120 @@ export default class extends React.Component {
 
     return (
       <div
-        className=""
+        className="container"
         style={{
-          width: "1200px",
-          margin: "0 auto",
-          position: "relative",
           height: "100%",
         }}
       >
-        <h2>Chronos</h2>
         <div
-          className=""
-          style={{ position: "absolute", top: "40px", bottom: "0" }}
+          class="modal"
+          tabindex="-1"
+          role="dialog"
+          style={{
+            display: _.get(that, "state.showNewModal") ? "block" : "none",
+          }}
         >
-          <input
-            type="text"
-            class="form-control"
-            aria-describedby="search"
-            placeholder="Search"
-            onChange={that.updateSearch.bind(that)}
-          />
-          <div
-            class="list-group"
-            style={{
-              bottom: "0",
-              height: "100%",
-              //  border: "1px solid black",
-              overflowY: "scroll",
-              paddingLeft: "5px",
-            }}
-          >
-            {_.get(this, "state.jobs", []).map(function (job) {
-              if (
-                that.state.search &&
-                job.name.indexOf(that.state.search) < 0
-              ) {
-                return null;
-              }
-              return (
-                <a
-                  class={
-                    "list-group-item list-group-item-action" +
-                    (_.get(that, "state.job.name") == job.name ? " active" : "")
-                  }
-                  onClick={function () {
-                    that.openJob(job);
-                  }}
-                  key={job.name}
-                  style={{ cursor: "pointer" }}
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">New Job</h5>
+                <button
+                  onClick={that.hidNewModal.bind(that)}
+                  type="button"
+                  class="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
                 >
-                  {job.name}
-                </a>
-              );
-            })}
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <p>Job Name</p>
+                <input
+                  value={_.get(that, "state.newJobName")}
+                  onChange={that.newJobName.bind(that)}
+                  type="text"
+                />
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  onClick={that.showNewJob.bind(that)}
+                >
+                  Create
+                </button>
+                <button
+                  onClick={that.hidNewModal.bind(that)}
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-
+        </div>
+        <h2>Chronos</h2>
+        <div class="row">
+          <div class="col-3">
+            <button
+              type="button"
+              onClick={function () {
+                that.showNewModal();
+              }}
+              className={"btn btn-success"}
+            >
+              New Job
+            </button>
+            <input
+              type="text"
+              class="form-control"
+              aria-describedby="search"
+              placeholder="Search"
+              onChange={that.updateSearch.bind(that)}
+            />
+            <div
+              class="list-group"
+              style={{
+                bottom: "0",
+                height: "100%",
+                //  border: "1px solid black",
+                overflowY: "scroll",
+                paddingLeft: "5px",
+              }}
+            >
+              {_.get(this, "state.jobs", []).map(function (job) {
+                if (
+                  that.state.search &&
+                  job.name.indexOf(that.state.search) < 0
+                ) {
+                  return null;
+                }
+                return (
+                  <a
+                    class={
+                      "list-group-item list-group-item-action" +
+                      (_.get(that, "state.job.name") == job.name
+                        ? " active"
+                        : "")
+                    }
+                    onClick={function () {
+                      that.openJob(job);
+                    }}
+                    key={job.name}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {job.name}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
           <div
+            class="col-9"
             style={{
-              position: "absolute",
-              width: "700px",
-              left: "420px",
-              top: "0",
               height: "100%",
               overflowY: "scroll",
             }}
