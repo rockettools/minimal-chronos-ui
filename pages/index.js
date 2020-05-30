@@ -27,13 +27,21 @@ export default class extends React.Component {
   }
 
   openJob(job) {
+    const that = this;
     job.environmentVariables = job.environmentVariables.sort((a, b) =>
       a.name.localeCompare(b.name)
     );
     window.location.hash = "#" + encodeURIComponent(job.name);
-    this.setState({
-      job,
-    });
+    this.setState(
+      {
+        job: undefined,
+      },
+      function () {
+        that.setState({
+          job,
+        });
+      }
+    );
   }
 
   removeEnvVar(envVar) {
@@ -111,7 +119,10 @@ export default class extends React.Component {
   }
 
   saveJob(job) {
-    console.log(job);
+    // Clean up the container blob
+    if (job.container && !job.container.image) {
+      delete job.container;
+    }
 
     const result = fetch("/job", {
       body: JSON.stringify(job),
@@ -189,6 +200,8 @@ export default class extends React.Component {
       name: this.state.newJobName,
       description: "",
       environmentVariables: [],
+      container: null,
+      constraints: [],
     });
     this.setState({
       showNewModal: false,
@@ -261,14 +274,12 @@ export default class extends React.Component {
         </div>
 
         <div style={{ clear: "both" }}></div>
-        {this.state.job.container ? (
-          <div>
-            <h5>Container</h5>
-            {that.makeInputField("Image", "container.image", {
-              width: "600px",
-            })}
-          </div>
-        ) : null}
+        <div>
+          <h5>Container</h5>
+          {that.makeInputField("Image", "container.image", {
+            width: "600px",
+          })}
+        </div>
 
         <h5>Schedule</h5>
         {that.makeInputField("Schedule", "schedule")}
