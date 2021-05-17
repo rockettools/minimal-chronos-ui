@@ -19,29 +19,19 @@ export default class extends React.Component {
 
       const job = _.filter(jobs, (job) => job.name === hash)[0];
       if (job) {
-        this.setState({
-          job,
-        });
+        this.setState({ job });
       }
     }
   }
 
   openJob(job) {
     const that = this;
-    job.environmentVariables = job.environmentVariables.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    job.environmentVariables = job.environmentVariables
+      ? job.environmentVariables.sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+
     window.location.hash = "#" + encodeURIComponent(job.name);
-    this.setState(
-      {
-        job: undefined,
-      },
-      function () {
-        that.setState({
-          job,
-        });
-      }
-    );
+    this.setState({ job: undefined }, () => that.setState({ job }));
   }
 
   removeEnvVar(envVar) {
@@ -114,17 +104,17 @@ export default class extends React.Component {
     });
   }
 
-  runJob(job) {
-    fetch("/run_job/" + encodeURIComponent(job));
+  async runJob(job) {
+    await fetch("/run_job/" + encodeURIComponent(job));
   }
 
-  saveJob(job) {
+  async saveJob(job) {
     // Clean up the container blob
     if (job.container && !job.container.image) {
       delete job.container;
     }
 
-    const result = fetch("/job", {
+    await fetch("/job", {
       body: JSON.stringify(job),
       headers: {
         "content-type": "application/json",
@@ -134,7 +124,7 @@ export default class extends React.Component {
   }
 
   async deleteJob(job) {
-    if (!confirm("Are you sure you want to delete: " + job.name + "?")) {
+    if (!confirm(`Are you sure you want to delete ${job.name}?`)) {
       return;
     }
 
@@ -324,13 +314,7 @@ export default class extends React.Component {
                 }}
                 style={{ width: "150px" }}
               />
-              <span
-                onClick={function () {
-                  that.removeEnvVar(envVar);
-                }}
-              >
-                X
-              </span>
+              <span onClick={() => that.removeEnvVar(envVar)}>X</span>
             </div>
           );
         })}
@@ -345,42 +329,37 @@ export default class extends React.Component {
         </button>
         <br />
         <br />
-        {this.state.job.environmentVariables.map(function (envVar, idx) {
-          return (
-            <div>
-              <input
-                type="text"
-                value={envVar.name}
-                onChange={function (evt) {
-                  that.updateField(
-                    ["environmentVariables", idx, "name"],
-                    evt.target.value
-                  );
-                }}
-                style={{ width: "300px" }}
-              />{" "}
-              ={" "}
-              <input
-                type="text"
-                value={envVar.value}
-                onChange={function (evt) {
-                  that.updateField(
-                    ["environmentVariables", idx, "value"],
-                    evt.target.value
-                  );
-                }}
-                style={{ width: "350px" }}
-              />
-              <span
-                onClick={function () {
-                  that.removeEnvVar(envVar);
-                }}
-              >
-                X
-              </span>
-            </div>
-          );
-        })}
+        {this.state.job.environmentVariables &&
+          this.state.job.environmentVariables.map(function (envVar, idx) {
+            return (
+              <div>
+                <input
+                  type="text"
+                  value={envVar.name}
+                  onChange={function (evt) {
+                    that.updateField(
+                      ["environmentVariables", idx, "name"],
+                      evt.target.value
+                    );
+                  }}
+                  style={{ width: "300px" }}
+                />{" "}
+                ={" "}
+                <input
+                  type="text"
+                  value={envVar.value}
+                  onChange={function (evt) {
+                    that.updateField(
+                      ["environmentVariables", idx, "value"],
+                      evt.target.value
+                    );
+                  }}
+                  style={{ width: "350px" }}
+                />
+                <span onClick={() => that.removeEnvVar(envVar)}>X</span>
+              </div>
+            );
+          })}
         <div style={{ height: "20px", width: "100px" }}></div>
       </div>
     ) : null;
@@ -393,28 +372,28 @@ export default class extends React.Component {
         }}
       >
         <div
-          class="modal"
-          tabindex="-1"
+          className="modal"
+          tabIndex="-1"
           role="dialog"
           style={{
             display: _.get(that, "state.showNewModal") ? "block" : "none",
           }}
         >
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">New Job</h5>
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">New Job</h5>
                 <button
                   onClick={that.hidNewModal.bind(that)}
                   type="button"
-                  class="close"
+                  className="close"
                   data-dismiss="modal"
                   aria-label="Close"
                 >
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <div class="modal-body">
+              <div className="modal-body">
                 <p>Job Name</p>
                 <input
                   value={_.get(that, "state.newJobName")}
@@ -422,10 +401,10 @@ export default class extends React.Component {
                   type="text"
                 />
               </div>
-              <div class="modal-footer">
+              <div className="modal-footer">
                 <button
                   type="button"
-                  class="btn btn-primary"
+                  className="btn btn-primary"
                   onClick={that.showNewJob.bind(that)}
                 >
                   Create
@@ -433,7 +412,7 @@ export default class extends React.Component {
                 <button
                   onClick={that.hidNewModal.bind(that)}
                   type="button"
-                  class="btn btn-secondary"
+                  className="btn btn-secondary"
                   data-dismiss="modal"
                 >
                   Close
@@ -443,30 +422,28 @@ export default class extends React.Component {
           </div>
         </div>
         <h2>Chronos</h2>
-        <div class="row">
-          <div class="col-3">
+        <div className="row">
+          <div className="col-3">
             <button
               type="button"
-              onClick={function () {
-                that.showNewModal();
-              }}
+              onClick={() => that.showNewModal()}
               className={"btn btn-success"}
             >
               New Job
             </button>
+            <hr />
             <input
               type="text"
-              class="form-control"
+              className="form-control"
               aria-describedby="search"
               placeholder="Search"
               onChange={that.updateSearch.bind(that)}
             />
             <div
-              class="list-group"
+              className="list-group"
               style={{
                 bottom: "0",
                 height: "100%",
-                //  border: "1px solid black",
                 overflowY: "scroll",
                 paddingLeft: "5px",
               }}
@@ -480,15 +457,13 @@ export default class extends React.Component {
                 }
                 return (
                   <a
-                    class={
+                    className={
                       "list-group-item list-group-item-action" +
                       (_.get(that, "state.job.name") == job.name
                         ? " active"
                         : "")
                     }
-                    onClick={function () {
-                      that.openJob(job);
-                    }}
+                    onClick={() => that.openJob(job)}
                     key={job.name}
                     style={{ cursor: "pointer" }}
                   >
@@ -499,7 +474,7 @@ export default class extends React.Component {
             </div>
           </div>
           <div
-            class="col-9"
+            className="col-9"
             style={{
               height: "100%",
               overflowY: "scroll",
