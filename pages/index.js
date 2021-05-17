@@ -203,41 +203,57 @@ export default class extends React.Component {
 
     const job = _.get(this, "state.job") ? (
       <div className={""} style={{}}>
-        <div style={{}}>
+        <div
+          className="btn-group btn-group-md"
+          role="group"
+          aria-label="Job actions"
+        >
           <button
             type="button"
-            onClick={function () {
-              that.runJob(that.state.job.name);
-            }}
-            className={"btn btn-success"}
+            onClick={() => that.runJob(that.state.job.name)}
+            className={"btn btn-success mr-1"}
+            disabled={!Boolean(that.state.job.disabled)}
           >
             Run
           </button>
           <button
             type="button"
-            onClick={function () {
-              that.saveJob(that.state.job);
-            }}
-            className={"btn btn-success"}
+            onClick={() => that.saveJob(that.state.job)}
+            className="btn btn-success mr-1"
           >
             Save
           </button>
           <button
             type="button"
-            onClick={function () {
-              that.deleteJob(that.state.job);
-            }}
-            className={"btn btn-danger"}
+            onClick={() => that.deleteJob(that.state.job)}
+            className={"btn btn-danger mr-1"}
           >
             Delete
           </button>
+        </div>
+
+        <div
+          className="btn-group btn-group-md float-right"
+          role="group"
+          aria-label="Duplicate job"
+        >
           <input
             type="text"
+            placeholder="Enter name for new job"
             onChange={that.updateDuplicateName.bind(that)}
             value={this.state.duplicateName}
-          />{" "}
-          <span onClick={that.duplicate.bind(that)}>Duplicate</span>
+            className="mr-1"
+          />
+          <button
+            type="button"
+            onClick={that.duplicate.bind(that)}
+            className={"btn btn-primary mr-1"}
+            disabled={!Boolean(that.state.duplicateName)}
+          >
+            Duplicate
+          </button>
         </div>
+
         <h3>{this.state.job.name}</h3>
         {this.makeCheckbox("Async", "async")}
         {this.makeCheckbox("Disabled", "disabled")}
