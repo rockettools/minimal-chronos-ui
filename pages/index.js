@@ -19,6 +19,7 @@ export default class extends React.Component {
 
       const job = _.filter(jobs, (job) => job.name === hash)[0];
       if (job) {
+        job.environmentVariables = job.environmentVariables || [];
         this.setState({ job });
       }
     }
@@ -52,16 +53,20 @@ export default class extends React.Component {
   makeInputField(fieldName, path, style) {
     const that = this;
     return (
-      <div className={"form-group"}>
-        {fieldName}:{" "}
-        <input
-          style={style}
-          onChange={function (evt) {
-            that.updateField(path, evt.target.value);
-          }}
-          type="text"
-          value={_.get(this.state.job, path)}
-        />
+      <div className="form-group row">
+        <label className="col-sm-3 col-form-label" for={fieldName}>
+          {fieldName}
+        </label>
+        <div class="col-sm-9">
+          <input
+            id={fieldName}
+            className="form-control"
+            style={style}
+            onChange={(evt) => that.updateField(path, evt.target.value)}
+            type="text"
+            value={_.get(this.state.job, path)}
+          />
+        </div>
       </div>
     );
   }
@@ -69,15 +74,19 @@ export default class extends React.Component {
   makeCheckbox(fieldName, path) {
     const that = this;
     return (
-      <div className={"form-group"}>
-        {fieldName}:{" "}
-        <input
-          type="checkbox"
-          onChange={function (evt) {
-            that.updateField(path, evt.target.checked);
-          }}
-          checked={_.get(this.state.job, path)}
-        />
+      <div class="form-group row">
+        <div class="col-sm-2">{fieldName}</div>
+        <div class="col-sm-10">
+          <div class="form-check">
+            <input
+              id={fieldName}
+              className="form-check-input"
+              type="checkbox"
+              onChange={(evt) => that.updateField(path, evt.target.checked)}
+              checked={_.get(this.state.job, path)}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -85,15 +94,15 @@ export default class extends React.Component {
   makeTextarea(fieldName, path) {
     const that = this;
     return (
-      <div className={"form-group"}>
-        {fieldName}:{" "}
+      <div className="form-group">
+        <label for={fieldName}>{fieldName}</label>
         <textarea
-          style={{ width: "100%" }}
-          onChange={function (evt) {
-            that.updateField(path, evt.target.value);
-          }}
+          className="form-control"
+          id={fieldName}
+          rows="3"
+          onChange={(evt) => that.updateField(path, evt.target.value)}
           value={_.get(this.state.job, path)}
-        />
+        ></textarea>
       </div>
     );
   }
@@ -200,153 +209,146 @@ export default class extends React.Component {
 
   render() {
     const that = this;
+    const jobObject = _.get(this, "state.job");
 
-    const job = _.get(this, "state.job") ? (
-      <div className={""} style={{}}>
-        <div
-          className="btn-group btn-group-md"
-          role="group"
-          aria-label="Job actions"
-        >
-          <button
-            type="button"
-            onClick={() => that.runJob(that.state.job.name)}
-            className={"btn btn-success mr-1"}
-            disabled={!Boolean(that.state.job.disabled)}
+    const job = jobObject && (
+      <form>
+        <div className="container">
+          <div
+            className="btn-group btn-group-md"
+            role="group"
+            aria-label="Job actions"
           >
-            Run
-          </button>
-          <button
-            type="button"
-            onClick={() => that.saveJob(that.state.job)}
-            className="btn btn-success mr-1"
+            <button
+              type="button"
+              onClick={() => that.runJob(that.state.job.name)}
+              className={"btn btn-success mr-1"}
+            >
+              Run
+            </button>
+            <button
+              type="button"
+              onClick={() => that.saveJob(that.state.job)}
+              className="btn btn-success mr-1"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => that.deleteJob(that.state.job)}
+              className={"btn btn-danger mr-1"}
+            >
+              Delete
+            </button>
+          </div>
+
+          <div
+            className="btn-group btn-group-md float-right"
+            role="group"
+            aria-label="Duplicate job"
           >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => that.deleteJob(that.state.job)}
-            className={"btn btn-danger mr-1"}
-          >
-            Delete
-          </button>
+            <input
+              type="text"
+              placeholder="Enter name for new job"
+              onChange={that.updateDuplicateName.bind(that)}
+              value={this.state.duplicateName}
+              className="mr-1"
+            />
+            <button
+              type="button"
+              onClick={that.duplicate.bind(that)}
+              className={"btn btn-primary mr-1"}
+              disabled={!Boolean(that.state.duplicateName)}
+            >
+              Duplicate
+            </button>
+          </div>
         </div>
 
-        <div
-          className="btn-group btn-group-md float-right"
-          role="group"
-          aria-label="Duplicate job"
-        >
-          <input
-            type="text"
-            placeholder="Enter name for new job"
-            onChange={that.updateDuplicateName.bind(that)}
-            value={this.state.duplicateName}
-            className="mr-1"
-          />
-          <button
-            type="button"
-            onClick={that.duplicate.bind(that)}
-            className={"btn btn-primary mr-1"}
-            disabled={!Boolean(that.state.duplicateName)}
-          >
-            Duplicate
-          </button>
-        </div>
+        <div className="container">
+          <hr />
+          <h2>{this.state.job.name}</h2>
 
-        <h3>{this.state.job.name}</h3>
-        {this.makeCheckbox("Async", "async")}
-        {this.makeCheckbox("Disabled", "disabled")}
-        {this.makeTextarea("Description", "description")}
-        {this.makeTextarea("Command", "command")}
-        {this.makeCheckbox("Shell", "shell")}
-
-        <h5>Resources</h5>
-        <div style={{ float: "left" }}>
-          {that.makeInputField("CPUs", "cpus")}
-        </div>
-        <div style={{ float: "left", paddingLeft: "10px" }}>
-          {that.makeInputField("Mem", "mem")}
-        </div>
-        <div style={{ float: "left", paddingLeft: "10px" }}>
-          {that.makeInputField("Disk", "disk")}
-        </div>
-        <h5>Owner</h5>
-        <div style={{ float: "left" }}>
+          <h5>Job Owner & Description</h5>
           {that.makeInputField("Name", "ownerName")}
-        </div>
-        <div style={{ float: "left", paddingLeft: "10px" }}>
-          {that.makeInputField("Email", "owner", { width: "300px" })}
-        </div>
+          {that.makeInputField("Email", "owner")}
+          {this.makeTextarea("Description", "description")}
 
-        <div style={{ clear: "both" }}></div>
-        <div>
-          <h5>Container</h5>
-          {that.makeInputField("Image", "container.image", {
-            width: "600px",
-          })}
-        </div>
+          <h5>Runtime</h5>
+          {that.makeInputField("Image (if required)", "container.image")}
+          {this.makeTextarea("Command", "command")}
+          {this.makeCheckbox("Async", "async")}
+          {this.makeCheckbox("Disabled", "disabled")}
+          {this.makeCheckbox("Shell", "shell")}
 
-        <h5>Schedule</h5>
-        {that.makeInputField("Schedule", "schedule")}
-        {that.makeInputField("Epsilon", "epsilon")}
-        {that.makeInputField("scheduleTimeZone", "scheduleTimeZone")}
+          <h5>Resources</h5>
+          {that.makeInputField("CPUs", "cpus")}
+          {that.makeInputField("Memory (MB)", "mem")}
+          {that.makeInputField("Disk (MB)", "disk")}
 
-        <h5>Constraints</h5>
-        <button
-          className="btn btn-secondary"
-          onClick={that.prependNewConstraint.bind(that)}
-        >
-          Add New Field
-        </button>
-        <br />
-        <br />
-        {_.get(this, "state.job.constraints", []).map(function (envVar, idx) {
-          return (
-            <div>
-              <input
-                type="text"
-                value={envVar[0]}
-                onChange={function (evt) {
-                  that.updateField(["constraints", idx, "0"], evt.target.value);
-                }}
-                style={{ width: "160px" }}
-              />
-              &nbsp;&nbsp;EQUALS&nbsp;&nbsp;
-              <input
-                type="text"
-                value={envVar[2]}
-                onChange={function (evt) {
-                  if (evt.target.value.length > 0) {
+          <h5>Schedule</h5>
+          {that.makeInputField("Schedule", "schedule")}
+          {that.makeInputField("Epsilon", "epsilon")}
+          {that.makeInputField("scheduleTimeZone", "scheduleTimeZone")}
+
+          <h5>Constraints</h5>
+          <button
+            className="btn btn-secondary"
+            onClick={that.prependNewConstraint.bind(that)}
+          >
+            Add New Field
+          </button>
+          <br />
+          <br />
+          {_.get(this, "state.job.constraints", []).map(function (envVar, idx) {
+            return (
+              <div>
+                <input
+                  type="text"
+                  value={envVar[0]}
+                  onChange={function (evt) {
                     that.updateField(
-                      ["constraints", idx, "2"],
+                      ["constraints", idx, "0"],
                       evt.target.value
                     );
-                  } else {
-                    const job = that.state.job;
-                    job.constraints[idx] = job.constraints[idx].slice(0, 2);
-                    that.setState({ job });
-                  }
-                }}
-                style={{ width: "150px" }}
-              />
-              <span onClick={() => that.removeEnvVar(envVar)}>X</span>
-            </div>
-          );
-        })}
-        <br />
+                  }}
+                  style={{ width: "160px" }}
+                />
+                &nbsp;&nbsp;EQUALS&nbsp;&nbsp;
+                <input
+                  type="text"
+                  value={envVar[2]}
+                  onChange={function (evt) {
+                    if (evt.target.value.length > 0) {
+                      that.updateField(
+                        ["constraints", idx, "2"],
+                        evt.target.value
+                      );
+                    } else {
+                      const job = that.state.job;
+                      job.constraints[idx] = job.constraints[idx].slice(0, 2);
+                      that.setState({ job });
+                    }
+                  }}
+                  style={{ width: "150px" }}
+                />
+                <span onClick={() => that.removeEnvVar(envVar)}>X</span>
+              </div>
+            );
+          })}
 
-        <h5>Environment Variables</h5>
-        <button
-          className="btn btn-secondary"
-          onClick={that.prependNewEnvVar.bind(that)}
-        >
-          Add New Field
-        </button>
-        <br />
-        <br />
-        {this.state.job.environmentVariables &&
-          this.state.job.environmentVariables.map(function (envVar, idx) {
+          <br />
+
+          <h5>Environment Variables</h5>
+          <button
+            className="btn btn-secondary"
+            onClick={that.prependNewEnvVar.bind(that)}
+          >
+            Add New Field
+          </button>
+          <br />
+          <br />
+          {this.state.job.environmentVariables.map(function (envVar, idx) {
             return (
               <div>
                 <input
@@ -376,9 +378,10 @@ export default class extends React.Component {
               </div>
             );
           })}
-        <div style={{ height: "20px", width: "100px" }}></div>
-      </div>
-    ) : null;
+          <div style={{ height: "20px", width: "100px" }}></div>
+        </div>
+      </form>
+    );
 
     return (
       <div
@@ -461,7 +464,6 @@ export default class extends React.Component {
                 bottom: "0",
                 height: "100%",
                 overflowY: "scroll",
-                paddingLeft: "5px",
               }}
             >
               {_.get(this, "state.jobs", []).map(function (job) {
