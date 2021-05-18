@@ -19,29 +19,20 @@ export default class extends React.Component {
 
       const job = _.filter(jobs, (job) => job.name === hash)[0];
       if (job) {
-        this.setState({
-          job,
-        });
+        job.environmentVariables = job.environmentVariables || [];
+        this.setState({ job });
       }
     }
   }
 
   openJob(job) {
     const that = this;
-    job.environmentVariables = job.environmentVariables.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    job.environmentVariables = job.environmentVariables
+      ? job.environmentVariables.sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+
     window.location.hash = "#" + encodeURIComponent(job.name);
-    this.setState(
-      {
-        job: undefined,
-      },
-      function () {
-        that.setState({
-          job,
-        });
-      }
-    );
+    this.setState({ job: undefined }, () => that.setState({ job }));
   }
 
   removeEnvVar(envVar) {
@@ -62,16 +53,20 @@ export default class extends React.Component {
   makeInputField(fieldName, path, style) {
     const that = this;
     return (
-      <div className={"form-group"}>
-        {fieldName}:{" "}
-        <input
-          style={style}
-          onChange={function (evt) {
-            that.updateField(path, evt.target.value);
-          }}
-          type="text"
-          value={_.get(this.state.job, path)}
-        />
+      <div className="form-group row">
+        <label className="col-sm-3 col-form-label" for={fieldName}>
+          {fieldName}
+        </label>
+        <div class="col-sm-9">
+          <input
+            id={fieldName}
+            className="form-control"
+            style={style}
+            onChange={(evt) => that.updateField(path, evt.target.value)}
+            type="text"
+            value={_.get(this.state.job, path)}
+          />
+        </div>
       </div>
     );
   }
@@ -79,15 +74,19 @@ export default class extends React.Component {
   makeCheckbox(fieldName, path) {
     const that = this;
     return (
-      <div className={"form-group"}>
-        {fieldName}:{" "}
-        <input
-          type="checkbox"
-          onChange={function (evt) {
-            that.updateField(path, evt.target.checked);
-          }}
-          checked={_.get(this.state.job, path)}
-        />
+      <div class="form-group row">
+        <div class="col-sm-2">{fieldName}</div>
+        <div class="col-sm-10">
+          <div class="form-check">
+            <input
+              id={fieldName}
+              className="form-check-input"
+              type="checkbox"
+              onChange={(evt) => that.updateField(path, evt.target.checked)}
+              checked={_.get(this.state.job, path)}
+            />
+          </div>
+        </div>
       </div>
     );
   }
@@ -95,13 +94,13 @@ export default class extends React.Component {
   makeTextarea(fieldName, path) {
     const that = this;
     return (
-      <div className={"form-group"}>
-        {fieldName}:{" "}
+      <div className="form-group">
+        <label for={fieldName}>{fieldName}</label>
         <textarea
-          style={{ width: "100%" }}
-          onChange={function (evt) {
-            that.updateField(path, evt.target.value);
-          }}
+          className="form-control"
+          id={fieldName}
+          rows="3"
+          onChange={(evt) => that.updateField(path, evt.target.value)}
           value={_.get(this.state.job, path)}
         />
       </div>
@@ -114,17 +113,17 @@ export default class extends React.Component {
     });
   }
 
-  runJob(job) {
-    fetch("/run_job/" + encodeURIComponent(job));
+  async runJob(job) {
+    await fetch("/run_job/" + encodeURIComponent(job));
   }
 
-  saveJob(job) {
+  async saveJob(job) {
     // Clean up the container blob
     if (job.container && !job.container.image) {
       delete job.container;
     }
 
-    const result = fetch("/job", {
+    await fetch("/job", {
       body: JSON.stringify(job),
       headers: {
         "content-type": "application/json",
@@ -134,7 +133,7 @@ export default class extends React.Component {
   }
 
   async deleteJob(job) {
-    if (!confirm("Are you sure you want to delete: " + job.name + "?")) {
+    if (!confirm(`Are you sure you want to delete ${job.name}?`)) {
       return;
     }
 
@@ -210,180 +209,179 @@ export default class extends React.Component {
 
   render() {
     const that = this;
+    const jobObject = _.get(this, "state.job");
 
-    const job = _.get(this, "state.job") ? (
-      <div className={""} style={{}}>
-        <div style={{}}>
-          <button
-            type="button"
-            onClick={function () {
-              that.runJob(that.state.job.name);
-            }}
-            className={"btn btn-success"}
+    const job = jobObject && (
+      <form>
+        <div className="container">
+          <div
+            className="btn-group btn-group-md"
+            role="group"
+            aria-label="Job actions"
           >
-            Run
-          </button>
-          <button
-            type="button"
-            onClick={function () {
-              that.saveJob(that.state.job);
-            }}
-            className={"btn btn-success"}
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={function () {
-              that.deleteJob(that.state.job);
-            }}
-            className={"btn btn-danger"}
-          >
-            Delete
-          </button>
-          <input
-            type="text"
-            onChange={that.updateDuplicateName.bind(that)}
-            value={this.state.duplicateName}
-          />{" "}
-          <span onClick={that.duplicate.bind(that)}>Duplicate</span>
-        </div>
-        <h3>{this.state.job.name}</h3>
-        {this.makeCheckbox("Async", "async")}
-        {this.makeCheckbox("Disabled", "disabled")}
-        {this.makeTextarea("Description", "description")}
-        {this.makeTextarea("Command", "command")}
-        {this.makeCheckbox("Shell", "shell")}
+            <button
+              type="button"
+              onClick={() => that.runJob(that.state.job.name)}
+              className="btn btn-success mr-1"
+            >
+              Run
+            </button>
+            <button
+              type="button"
+              onClick={() => that.saveJob(that.state.job)}
+              className="btn btn-success mr-1"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => that.deleteJob(that.state.job)}
+              className="btn btn-danger mr-1"
+            >
+              Delete
+            </button>
+          </div>
 
-        <h5>Resources</h5>
-        <div style={{ float: "left" }}>
-          {that.makeInputField("CPUs", "cpus")}
+          <div
+            className="btn-group btn-group-md float-right"
+            role="group"
+            aria-label="Duplicate job"
+          >
+            <input
+              type="text"
+              placeholder="Enter name for new job"
+              onChange={that.updateDuplicateName.bind(that)}
+              value={this.state.duplicateName}
+              className="mr-1"
+            />
+            <button
+              type="button"
+              onClick={that.duplicate.bind(that)}
+              className="btn btn-primary mr-1"
+              disabled={!Boolean(that.state.duplicateName)}
+            >
+              Duplicate
+            </button>
+          </div>
         </div>
-        <div style={{ float: "left", paddingLeft: "10px" }}>
-          {that.makeInputField("Mem", "mem")}
-        </div>
-        <div style={{ float: "left", paddingLeft: "10px" }}>
-          {that.makeInputField("Disk", "disk")}
-        </div>
-        <h5>Owner</h5>
-        <div style={{ float: "left" }}>
+
+        <div className="container">
+          <hr />
+          <h2>{this.state.job.name}</h2>
+
+          <h5>Job Owner & Description</h5>
           {that.makeInputField("Name", "ownerName")}
-        </div>
-        <div style={{ float: "left", paddingLeft: "10px" }}>
-          {that.makeInputField("Email", "owner", { width: "300px" })}
-        </div>
+          {that.makeInputField("Email", "owner")}
+          {this.makeTextarea("Description", "description")}
 
-        <div style={{ clear: "both" }}></div>
-        <div>
-          <h5>Container</h5>
-          {that.makeInputField("Image", "container.image", {
-            width: "600px",
-          })}
-        </div>
+          <h5>Runtime</h5>
+          {that.makeInputField("Image (if required)", "container.image")}
+          {this.makeTextarea("Command", "command")}
+          {this.makeCheckbox("Async", "async")}
+          {this.makeCheckbox("Disabled", "disabled")}
+          {this.makeCheckbox("Shell", "shell")}
 
-        <h5>Schedule</h5>
-        {that.makeInputField("Schedule", "schedule")}
-        {that.makeInputField("Epsilon", "epsilon")}
-        {that.makeInputField("scheduleTimeZone", "scheduleTimeZone")}
+          <h5>Resources</h5>
+          {that.makeInputField("CPUs", "cpus")}
+          {that.makeInputField("Memory (MB)", "mem")}
+          {that.makeInputField("Disk (MB)", "disk")}
 
-        <h5>Constraints</h5>
-        <button
-          className="btn btn-secondary"
-          onClick={that.prependNewConstraint.bind(that)}
-        >
-          Add New Field
-        </button>
-        <br />
-        <br />
-        {_.get(this, "state.job.constraints", []).map(function (envVar, idx) {
-          return (
-            <div>
-              <input
-                type="text"
-                value={envVar[0]}
-                onChange={function (evt) {
-                  that.updateField(["constraints", idx, "0"], evt.target.value);
-                }}
-                style={{ width: "160px" }}
-              />
-              &nbsp;&nbsp;EQUALS&nbsp;&nbsp;
-              <input
-                type="text"
-                value={envVar[2]}
-                onChange={function (evt) {
-                  if (evt.target.value.length > 0) {
+          <h5>Schedule</h5>
+          {that.makeInputField("Schedule", "schedule")}
+          {that.makeInputField("Epsilon", "epsilon")}
+          {that.makeInputField("scheduleTimeZone", "scheduleTimeZone")}
+
+          <h5>Constraints</h5>
+          <button
+            className="btn btn-secondary"
+            onClick={that.prependNewConstraint.bind(that)}
+          >
+            Add New Field
+          </button>
+          <br />
+          <br />
+          {_.get(this, "state.job.constraints", []).map(function (envVar, idx) {
+            return (
+              <div>
+                <input
+                  type="text"
+                  value={envVar[0]}
+                  onChange={function (evt) {
                     that.updateField(
-                      ["constraints", idx, "2"],
+                      ["constraints", idx, "0"],
                       evt.target.value
                     );
-                  } else {
-                    const job = that.state.job;
-                    job.constraints[idx] = job.constraints[idx].slice(0, 2);
-                    that.setState({ job });
-                  }
-                }}
-                style={{ width: "150px" }}
-              />
-              <span
-                onClick={function () {
-                  that.removeEnvVar(envVar);
-                }}
-              >
-                X
-              </span>
-            </div>
-          );
-        })}
-        <br />
+                  }}
+                  style={{ width: "160px" }}
+                />
+                &nbsp;&nbsp;EQUALS&nbsp;&nbsp;
+                <input
+                  type="text"
+                  value={envVar[2]}
+                  onChange={function (evt) {
+                    if (evt.target.value.length > 0) {
+                      that.updateField(
+                        ["constraints", idx, "2"],
+                        evt.target.value
+                      );
+                    } else {
+                      const job = that.state.job;
+                      job.constraints[idx] = job.constraints[idx].slice(0, 2);
+                      that.setState({ job });
+                    }
+                  }}
+                  style={{ width: "150px" }}
+                />
+                <span onClick={() => that.removeEnvVar(envVar)}>X</span>
+              </div>
+            );
+          })}
 
-        <h5>Environment Variables</h5>
-        <button
-          className="btn btn-secondary"
-          onClick={that.prependNewEnvVar.bind(that)}
-        >
-          Add New Field
-        </button>
-        <br />
-        <br />
-        {this.state.job.environmentVariables.map(function (envVar, idx) {
-          return (
-            <div>
-              <input
-                type="text"
-                value={envVar.name}
-                onChange={function (evt) {
-                  that.updateField(
-                    ["environmentVariables", idx, "name"],
-                    evt.target.value
-                  );
-                }}
-                style={{ width: "300px" }}
-              />{" "}
-              ={" "}
-              <input
-                type="text"
-                value={envVar.value}
-                onChange={function (evt) {
-                  that.updateField(
-                    ["environmentVariables", idx, "value"],
-                    evt.target.value
-                  );
-                }}
-                style={{ width: "350px" }}
-              />
-              <span
-                onClick={function () {
-                  that.removeEnvVar(envVar);
-                }}
-              >
-                X
-              </span>
-            </div>
-          );
-        })}
-        <div style={{ height: "20px", width: "100px" }}></div>
-      </div>
-    ) : null;
+          <br />
+
+          <h5>Environment Variables</h5>
+          <button
+            className="btn btn-secondary"
+            onClick={that.prependNewEnvVar.bind(that)}
+          >
+            Add New Field
+          </button>
+          <br />
+          <br />
+          {this.state.job.environmentVariables.map(function (envVar, idx) {
+            return (
+              <div>
+                <input
+                  type="text"
+                  value={envVar.name}
+                  onChange={function (evt) {
+                    that.updateField(
+                      ["environmentVariables", idx, "name"],
+                      evt.target.value
+                    );
+                  }}
+                  style={{ width: "300px" }}
+                />{" "}
+                ={" "}
+                <input
+                  type="text"
+                  value={envVar.value}
+                  onChange={function (evt) {
+                    that.updateField(
+                      ["environmentVariables", idx, "value"],
+                      evt.target.value
+                    );
+                  }}
+                  style={{ width: "350px" }}
+                />
+                <span onClick={() => that.removeEnvVar(envVar)}>X</span>
+              </div>
+            );
+          })}
+          <div style={{ height: "20px", width: "100px" }}></div>
+        </div>
+      </form>
+    );
 
     return (
       <div
@@ -393,28 +391,28 @@ export default class extends React.Component {
         }}
       >
         <div
-          class="modal"
-          tabindex="-1"
+          className="modal"
+          tabIndex="-1"
           role="dialog"
           style={{
             display: _.get(that, "state.showNewModal") ? "block" : "none",
           }}
         >
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">New Job</h5>
+          <div className="modal-dialog" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">New Job</h5>
                 <button
                   onClick={that.hidNewModal.bind(that)}
                   type="button"
-                  class="close"
+                  className="close"
                   data-dismiss="modal"
                   aria-label="Close"
                 >
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <div class="modal-body">
+              <div className="modal-body">
                 <p>Job Name</p>
                 <input
                   value={_.get(that, "state.newJobName")}
@@ -422,10 +420,10 @@ export default class extends React.Component {
                   type="text"
                 />
               </div>
-              <div class="modal-footer">
+              <div className="modal-footer">
                 <button
                   type="button"
-                  class="btn btn-primary"
+                  className="btn btn-primary"
                   onClick={that.showNewJob.bind(that)}
                 >
                   Create
@@ -433,7 +431,7 @@ export default class extends React.Component {
                 <button
                   onClick={that.hidNewModal.bind(that)}
                   type="button"
-                  class="btn btn-secondary"
+                  className="btn btn-secondary"
                   data-dismiss="modal"
                 >
                   Close
@@ -443,32 +441,29 @@ export default class extends React.Component {
           </div>
         </div>
         <h2>Chronos</h2>
-        <div class="row">
-          <div class="col-3">
+        <div className="row">
+          <div className="col-3">
             <button
               type="button"
-              onClick={function () {
-                that.showNewModal();
-              }}
-              className={"btn btn-success"}
+              onClick={() => that.showNewModal()}
+              className="btn btn-success"
             >
               New Job
             </button>
+            <hr />
             <input
               type="text"
-              class="form-control"
+              className="form-control"
               aria-describedby="search"
               placeholder="Search"
               onChange={that.updateSearch.bind(that)}
             />
             <div
-              class="list-group"
+              className="list-group"
               style={{
                 bottom: "0",
                 height: "100%",
-                //  border: "1px solid black",
                 overflowY: "scroll",
-                paddingLeft: "5px",
               }}
             >
               {_.get(this, "state.jobs", []).map(function (job) {
@@ -480,15 +475,13 @@ export default class extends React.Component {
                 }
                 return (
                   <a
-                    class={
+                    className={
                       "list-group-item list-group-item-action" +
                       (_.get(that, "state.job.name") == job.name
                         ? " active"
                         : "")
                     }
-                    onClick={function () {
-                      that.openJob(job);
-                    }}
+                    onClick={() => that.openJob(job)}
                     key={job.name}
                     style={{ cursor: "pointer" }}
                   >
@@ -499,7 +492,7 @@ export default class extends React.Component {
             </div>
           </div>
           <div
-            class="col-9"
+            className="col-9"
             style={{
               height: "100%",
               overflowY: "scroll",
