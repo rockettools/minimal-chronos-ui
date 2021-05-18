@@ -102,7 +102,7 @@ export default class extends React.Component {
           rows="3"
           onChange={(evt) => that.updateField(path, evt.target.value)}
           value={_.get(this.state.job, path)}
-        ></textarea>
+        />
       </div>
     );
   }
@@ -222,7 +222,7 @@ export default class extends React.Component {
             <button
               type="button"
               onClick={() => that.runJob(that.state.job.name)}
-              className={"btn btn-success mr-1"}
+              className="btn btn-success mr-1"
             >
               Run
             </button>
@@ -236,7 +236,7 @@ export default class extends React.Component {
             <button
               type="button"
               onClick={() => that.deleteJob(that.state.job)}
-              className={"btn btn-danger mr-1"}
+              className="btn btn-danger mr-1"
             >
               Delete
             </button>
@@ -257,7 +257,7 @@ export default class extends React.Component {
             <button
               type="button"
               onClick={that.duplicate.bind(that)}
-              className={"btn btn-primary mr-1"}
+              className="btn btn-primary mr-1"
               disabled={!Boolean(that.state.duplicateName)}
             >
               Duplicate
@@ -446,7 +446,7 @@ export default class extends React.Component {
             <button
               type="button"
               onClick={() => that.showNewModal()}
-              className={"btn btn-success"}
+              className="btn btn-success"
             >
               New Job
             </button>
