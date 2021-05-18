@@ -1,11 +1,10 @@
 name: Docker Image CI2
 
-
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
     branjobs:
 
 jobs:
