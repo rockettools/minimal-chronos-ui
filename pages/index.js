@@ -55,7 +55,7 @@ export default class extends React.Component {
     this.setState({ job });
   }
 
-  makeInputField(fieldName, path) {
+  makeInputField(fieldName, path, required = false) {
     const that = this;
     return (
       <div className="form-group row">
@@ -69,6 +69,7 @@ export default class extends React.Component {
             onChange={(evt) => that.updateField(path, evt.target.value)}
             type="text"
             value={_.get(this.state.job, path)}
+            required={required}
           />
         </div>
       </div>
@@ -95,7 +96,7 @@ export default class extends React.Component {
     );
   }
 
-  makeTextarea(fieldName, path) {
+  makeTextarea(fieldName, path, required = false) {
     const that = this;
     return (
       <div className="form-group">
@@ -106,6 +107,7 @@ export default class extends React.Component {
           rows="3"
           onChange={(evt) => that.updateField(path, evt.target.value)}
           value={_.get(this.state.job, path)}
+          required={required}
         />
       </div>
     );
@@ -216,7 +218,7 @@ export default class extends React.Component {
     const jobObject = _.get(this, "state.job");
 
     const job = jobObject && (
-      <form>
+      <form onSubmit={() => that.saveJob(that.state.job)}>
         <div className="container">
           <div
             className="btn-group btn-group-md"
@@ -230,11 +232,7 @@ export default class extends React.Component {
             >
               Run
             </button>
-            <button
-              type="button"
-              onClick={() => that.saveJob(that.state.job)}
-              className="btn btn-success mr-1"
-            >
+            <button type="submit" className="btn btn-success mr-1">
               Save
             </button>
             <button
@@ -274,13 +272,13 @@ export default class extends React.Component {
           <h2>{this.state.job.name}</h2>
 
           <h5>Job Owner & Description</h5>
-          {that.makeInputField("Name", "ownerName")}
-          {that.makeInputField("Email", "owner")}
+          {that.makeInputField("Name", "ownerName", true)}
+          {that.makeInputField("Email", "owner", true)}
           {this.makeTextarea("Description", "description")}
 
           <h5>Runtime</h5>
           {that.makeInputField("Image (if required)", "container.image")}
-          {this.makeTextarea("Command", "command")}
+          {this.makeTextarea("Command", "command", true)}
           {this.makeCheckbox("Async", "async")}
           {this.makeCheckbox("Disabled", "disabled")}
           {this.makeCheckbox("Shell", "shell")}
@@ -291,8 +289,8 @@ export default class extends React.Component {
           {that.makeInputField("Disk (MB)", "disk")}
 
           <h5>Schedule</h5>
-          {that.makeInputField("Schedule", "schedule")}
-          {that.makeInputField("Epsilon", "epsilon")}
+          {that.makeInputField("Schedule", "schedule", true)}
+          {that.makeInputField("Epsilon", "epsilon", true)}
           {that.makeInputField("scheduleTimeZone", "scheduleTimeZone")}
 
           <h5>Constraints</h5>
