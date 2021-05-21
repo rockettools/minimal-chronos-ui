@@ -17,7 +17,7 @@ export default class extends React.Component {
     if (window.location.hash && window.location.hash.length > 1) {
       const hash = window.location.hash.substr(1);
 
-      const job = _.filter(jobs, (job) => job.name === hash)[0];
+      const job = _.find(jobs, ["name", hash]);
       if (job) {
         job.environmentVariables = job.environmentVariables || [];
         this.setState({ job });
@@ -35,12 +35,17 @@ export default class extends React.Component {
     this.setState({ job: undefined }, () => that.setState({ job }));
   }
 
-  removeEnvVar(envVar) {
+  removeConstraint(idx) {
     const job = this.state.job;
-    job.environmentVariables = _.filter(
-      job.environmentVariables,
-      (a) => a.name !== envVar.name
-    );
+    // Remove the constraint at index (mutates array)
+    _.pullAt(job.constraints, idx);
+    this.setState({ job });
+  }
+
+  removeEnvVar(idx) {
+    const job = this.state.job;
+    // Remove the environment variable at index (mutates array)
+    _.pullAt(job.environmentVariables, idx);
     this.setState({ job });
   }
 
@@ -50,21 +55,21 @@ export default class extends React.Component {
     this.setState({ job });
   }
 
-  makeInputField(fieldName, path, style) {
+  makeInputField(fieldName, path, required = false) {
     const that = this;
     return (
       <div className="form-group row">
-        <label className="col-sm-3 col-form-label" for={fieldName}>
+        <label className="col-sm-3 col-form-label" htmlFor={fieldName}>
           {fieldName}
         </label>
-        <div class="col-sm-9">
+        <div className="col-sm-9">
           <input
             id={fieldName}
             className="form-control"
-            style={style}
             onChange={(evt) => that.updateField(path, evt.target.value)}
             type="text"
             value={_.get(this.state.job, path)}
+            required={required}
           />
         </div>
       </div>
@@ -74,10 +79,10 @@ export default class extends React.Component {
   makeCheckbox(fieldName, path) {
     const that = this;
     return (
-      <div class="form-group row">
-        <div class="col-sm-2">{fieldName}</div>
-        <div class="col-sm-10">
-          <div class="form-check">
+      <div className="form-group row">
+        <div className="col-sm-3 col-form-label">{fieldName}</div>
+        <div className="col-sm-9">
+          <div className="form-check">
             <input
               id={fieldName}
               className="form-check-input"
@@ -91,17 +96,18 @@ export default class extends React.Component {
     );
   }
 
-  makeTextarea(fieldName, path) {
+  makeTextarea(fieldName, path, required = false) {
     const that = this;
     return (
       <div className="form-group">
-        <label for={fieldName}>{fieldName}</label>
+        <label htmlFor={fieldName}>{fieldName}</label>
         <textarea
           className="form-control"
           id={fieldName}
           rows="3"
           onChange={(evt) => that.updateField(path, evt.target.value)}
           value={_.get(this.state.job, path)}
+          required={required}
         />
       </div>
     );
@@ -212,7 +218,7 @@ export default class extends React.Component {
     const jobObject = _.get(this, "state.job");
 
     const job = jobObject && (
-      <form>
+      <form onSubmit={() => that.saveJob(that.state.job)}>
         <div className="container">
           <div
             className="btn-group btn-group-md"
@@ -226,11 +232,7 @@ export default class extends React.Component {
             >
               Run
             </button>
-            <button
-              type="button"
-              onClick={() => that.saveJob(that.state.job)}
-              className="btn btn-success mr-1"
-            >
+            <button type="submit" className="btn btn-success mr-1">
               Save
             </button>
             <button
@@ -270,13 +272,13 @@ export default class extends React.Component {
           <h2>{this.state.job.name}</h2>
 
           <h5>Job Owner & Description</h5>
-          {that.makeInputField("Name", "ownerName")}
-          {that.makeInputField("Email", "owner")}
+          {that.makeInputField("Name", "ownerName", true)}
+          {that.makeInputField("Email", "owner", true)}
           {this.makeTextarea("Description", "description")}
 
           <h5>Runtime</h5>
           {that.makeInputField("Image (if required)", "container.image")}
-          {this.makeTextarea("Command", "command")}
+          {this.makeTextarea("Command", "command", true)}
           {this.makeCheckbox("Async", "async")}
           {this.makeCheckbox("Disabled", "disabled")}
           {this.makeCheckbox("Shell", "shell")}
@@ -287,8 +289,8 @@ export default class extends React.Component {
           {that.makeInputField("Disk (MB)", "disk")}
 
           <h5>Schedule</h5>
-          {that.makeInputField("Schedule", "schedule")}
-          {that.makeInputField("Epsilon", "epsilon")}
+          {that.makeInputField("Schedule", "schedule", true)}
+          {that.makeInputField("Epsilon", "epsilon", true)}
           {that.makeInputField("scheduleTimeZone", "scheduleTimeZone")}
 
           <h5>Constraints</h5>
@@ -300,10 +302,11 @@ export default class extends React.Component {
           </button>
           <br />
           <br />
-          {_.get(this, "state.job.constraints", []).map(function (envVar, idx) {
-            return (
-              <div>
+          {_.get(this, "state.job.constraints", []).map((envVar, idx) => (
+            <div className="form-row pb-2" key={`constraints_${idx}`}>
+              <div className="col">
                 <input
+                  className="form-control"
                   type="text"
                   value={envVar[0]}
                   onChange={function (evt) {
@@ -312,10 +315,12 @@ export default class extends React.Component {
                       evt.target.value
                     );
                   }}
-                  style={{ width: "160px" }}
                 />
-                &nbsp;&nbsp;EQUALS&nbsp;&nbsp;
+              </div>
+              <span className="my-auto"> &nbsp;&nbsp;EQUALS&nbsp;&nbsp;</span>
+              <div className="col">
                 <input
+                  className="form-control"
                   type="text"
                   value={envVar[2]}
                   onChange={function (evt) {
@@ -330,14 +335,11 @@ export default class extends React.Component {
                       that.setState({ job });
                     }
                   }}
-                  style={{ width: "150px" }}
                 />
-                <span onClick={() => that.removeEnvVar(envVar)}>X</span>
               </div>
-            );
-          })}
-
-          <br />
+              <span onClick={() => that.removeConstraint(idx)}>X</span>
+            </div>
+          ))}
 
           <h5>Environment Variables</h5>
           <button
@@ -348,10 +350,11 @@ export default class extends React.Component {
           </button>
           <br />
           <br />
-          {this.state.job.environmentVariables.map(function (envVar, idx) {
-            return (
-              <div>
+          {this.state.job.environmentVariables.map((envVar, idx) => (
+            <div className="form-row pb-2" key={`environmentVariables_${idx}`}>
+              <div className="col">
                 <input
+                  className="form-control"
                   type="text"
                   value={envVar.name}
                   onChange={function (evt) {
@@ -360,10 +363,12 @@ export default class extends React.Component {
                       evt.target.value
                     );
                   }}
-                  style={{ width: "300px" }}
-                />{" "}
-                ={" "}
+                />
+              </div>
+              <span className="my-auto"> =</span>
+              <div className="col">
                 <input
+                  className="form-control"
                   type="text"
                   value={envVar.value}
                   onChange={function (evt) {
@@ -372,13 +377,11 @@ export default class extends React.Component {
                       evt.target.value
                     );
                   }}
-                  style={{ width: "350px" }}
                 />
-                <span onClick={() => that.removeEnvVar(envVar)}>X</span>
               </div>
-            );
-          })}
-          <div style={{ height: "20px", width: "100px" }}></div>
+              <span onClick={() => that.removeEnvVar(idx)}>X</span>
+            </div>
+          ))}
         </div>
       </form>
     );

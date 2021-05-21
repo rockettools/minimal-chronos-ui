@@ -18,7 +18,8 @@
     "next": "^9.4.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "superagent": "^3.8.2"
+    "superagent": "^3.8.2",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",

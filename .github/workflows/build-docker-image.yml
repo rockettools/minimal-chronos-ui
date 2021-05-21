@@ -1,19 +1,18 @@
-name: Docker Image CI2
+name: Docker Build and Push
 
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
-    branjobs:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out
+      - name: Checkout Code
         uses: actions/checkout@v2
-      - name: some docker stuff
+      - name: Docker Build and Push
         uses: docker/build-push-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}

@@ -1,13 +1,11 @@
 {
-	  "env": {
+  "env": {
     "browser": true,
     "es6": true,
-        "node": true,
-		"commonjs": true
-
+    "node": true,
+    "commonjs": true
   },
-  	"parser": "babel-eslint",
-
+  "parser": "babel-eslint",
   "plugins": ["prettier"],
   "rules": {
     "prettier/prettier": "error"
